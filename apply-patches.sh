@@ -5,31 +5,33 @@ set -e
 patches="$(readlink -f -- $1)"
 
 for project in $(cd $patches/patches; echo *);do
-	p="$(tr _ / <<<$project)"
-	[ "$p" == build ] && p=build/make
-	repo sync -l --force-sync $p || continue
-	pushd $p
-	git clean -fdx; git reset --hard
-	for patch in $patches/patches/$project/*.patch;do
-		#Check if patch is already applied
-		if patch -f -p1 --dry-run -R < $patch > /dev/null;then
-		    echo -e "\033[01;32m\n Already patched... \033[0m"
-			continue
-		fi
+    p="$(tr _ / <<<$project)"
+    [ "$p" == build ] && p=build/make
+    repo sync -l --force-sync $p || continue
+    pushd $p
+    git clean -fdx; git reset --hard
+    for patch in $patches/patches/$project/*.patch;do
+        #Check if patch is already applied
+        if patch -f -p1 --dry-run -R < $patch > /dev/null;then
+            echo -e "\033[01;33m\n Already patched... \033[0m"
+            continue
+        fi
 
-		if git apply --check $patch;then
-		    echo -e "\033[33m"
-			git am $patch
-			echo -e "\033[0m"
-		elif patch -f -p1 --dry-run < $patch > /dev/null;then
-			#This will fail
-			git am $patch || true
-			patch -f -p1 < $patch
-			git add -u
-			git am --continue
-		else
-			echo -e "\033[01;33m\n Failed applying $patch ... 033[0m"
-		fi
-	done
-	popd
+        if git apply --check $patch;then
+            echo -e "\033[01;32m"
+            git am $patch
+            echo -e "\033[0m"
+        elif patch -f -p1 --dry-run < $patch > /dev/null;then
+            #This will fail
+            echo -e "\033[32m"
+            git am $patch || true
+            patch -f -p1 < $patch
+            git add -u
+            git am --continue
+            echo -e "\033[0m"
+        else
+            echo -e "\033[01;31m\n Failed applying $patch ... 033[0m"
+        fi
+    done
+    popd
 done
