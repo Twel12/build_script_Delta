@@ -7,6 +7,7 @@ export LC_ALL=C
 # Initialize local repository
 function init_local_repo() {
     echo -e "\033[01;33m\nCopy local manifest.xml... \033[0m"
+    mkdir -p .repo/local_manifests
     cp "$(dirname "$0")/local_manifest.xml" .repo/local_manifests/manifest.xml
 }
 
