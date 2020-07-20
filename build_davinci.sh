@@ -51,18 +51,12 @@ function envsetup() {
     mka installclean
 }
 
-function cleanup() {
-    echo -e "\033[01;33m\nClean up old packages... \033[0m"
-    if [ -f signed-target_files.zip ] ;then
-      rm -rf signed-target_files.zip
-    fi
-
-    if [ -f signed-ota_update.zip ] ;then
-      rm -rf signed-ota_update.zip
-    fi
-}
-
 function buildsigned() {
+    DATE_START=$(date +"%s")
+
+    # Remove old changelog file
+    rm -rf $OUT/PixelExperience_*
+
     mka target-files-package otatools -j$(nproc --all)
 
     echo -e "\033[01;33m\nSigning FULL package... \033[0m"
@@ -75,8 +69,19 @@ function buildsigned() {
         signed-target_files.zip \
         signed-ota_update.zip
 
+    # Release new full ota build
     mkdir -p release
-    mv signed-ota_update.zip ./release/PixelExperience_Plus-10.0-"$(date +%Y%m%d)"-UNOFFICIAL-davinci.zip
+    LIST=$(ls -1 $OUT | grep PixelExperience_)
+    NAME=${LIST%%-Changelog*}
+
+    mv signed-ota_update.zip ./release/$NAME.zip
+    cd ./release && md5sum "$NAME.zip" | sed -e "s|$(pwd)||" > "$NAME.zip.md5sum" && cd ..
+
+    mv Changelog.txt ./release/$NAME.Changelog.txt
+
+    DATE_END=$(date +"%s")
+    DIFF=$(($DATE_END - $DATE_START))
+    echo -e "\033[01;32m#### Build Completed Successfully ($(($DIFF / 3600)):$(($(($DIFF % 3600)) / 60)):$(($DIFF % 60)) (hh:mm:ss)) #### \033[0m"
 }
 
 function buildbacon() {
@@ -96,7 +101,6 @@ fi
 
 echo -e "\033[01;33m\n###### Setting up build environment ###### \033[0m"
 envsetup
-cleanup
 
 read -p "Do you want a signed build? (y/N) " choice_build
 
