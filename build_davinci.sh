@@ -97,27 +97,30 @@ function buildsigned() {
         echo -e "\033[01;33m\nNew signed-target_files.zip has been renamed to signed-target_files-${NAME}.zip \033[0m"
         echo -e "\033[01;33mOld signed-target_files.zip has been renamed to removed-$OLDLIST \033[0m"
 
-        bash ~/telegram.sh/telegram "Bacon Successfull ^_^"
-
         #Sourceforge Upload
-        DIR=/home/frs/project/pixelosdavinci/
         ROM=release/$DELTA_ZIP
         ROM2=release/$NAME.zip
-        rsync -Ph $ROM twel12@frs.sourceforge.net:"$DIR"PixelOS_Davinci_Incremental/
-        rsync -Ph $ROM2 twel12@frs.sourceforge.net:"$DIR"PixelOS_Davinci/
-        echo -e "\033[01;31m\nUpload Completed ^_^\033[0m"
-        echo -e "\033[01;31m\nCreating Download Post ^_^\033[0m"
+        echo -e "\033[01;33m\n-------------- Uploading Build to SourceForge -------------- \033[0m"
+        rsync -Ph $ROM twel12@frs.sourceforge.net:/home/frs/project/pixelosdavinci/PixelOS_Davinci_Incremental/
+        rsync -Ph $ROM2 twel12@frs.sourceforge.net:/home/frs/project/pixelosdavinci/PixelOS_Davinci/
+        echo -e "\033[01;31m\n-------------------- Upload Completed --------------------\033[0m"
+        echo -e "\033[01;31m\n---------------- Creating Download Post ^_^ ----------------\033[0m"
         POST
-        echo -e "\033[01;31m\nPost Created ^_^\033[0m"
+        echo -e "\033[01;31m\n--------------------- Post Created ^_^ ---------------------\033[0m"
     fi
-        echo -e "\033[01;31m\nIncremental build Canceled!\033[0m"
+        echo -e "\033[01;31m\n ---------------Incremental build Canceled! ---------------\033[0m"
 
-echo -e "\033[01;32m\n#### PixelOS Baked Successfully ^_^ #### \033[0m"
+echo -e "\033[01;32m\n----------------------- PixelOS Baked Successfully ^_^ ----------------------- \033[0m"
 }
 
 function buildbacon() {
     mka bacon -j$(nproc --all)
-    bash ~/telegram.sh/telegram -c -1001391319022 "Bacon Successfull ¯\_(ツ)_/¯"
+    read -p "Do you want to Upload Build (y/n)" choice_test
+
+    if [[ $choice_test == *"y"* ]]; then
+        TEST
+    fi
+        bash ~/telegram.sh/telegram "Build Successfull ^_^"
 }
 
 ## handle command line arguments
@@ -130,34 +133,46 @@ if [[ $choice_sync == *"y"* ]]; then
     apply_patches
 fi
 
-echo -e "\033[01;33m\n###### Setting up build environment ###### \033[0m"
+echo -e "\033[01;33m\n---------------- Setting up build environment ---------------- \033[0m"
 envsetup
 
 #Make Post
 function POST() {
     DownloadFull=https://sourceforge.net/projects/pixelosdavinci/files/PixelOS_Davinci/"$NAME".zip/download
 DownloadDelta=https://sourceforge.net/projects/pixelosdavinci/files/PixelOS_Incremental/"$DELTA_ZIP"/download
-bash ~/telegram.sh/telegram -i ~/telegram.sh/hello.jpg -M "#PixelOS #Android10 #Davinci #OTAUpdates
-*Pixel OS | Android 10*
+bash ~/telegram.sh/telegram -i ~/telegram.sh/hello.jpg -M "#PixelOS #Android10 #Davinci #OTAUpdates$'\n'
+*Pixel OS | Android 10*$'\n'
 > [Download (Full Package)]("$DownloadFull")
 > [Download (Incremental)]("$DownloadDelta")
 > [Changelog](https://raw.githubusercontent.com/Twel12/android_OTA/master/davinci_changelogs.txt)
-> [Join Chat](t.me/CatPower12) 
-Note - Incremental Pushed Via Update too :)
+> [Join Chat](t.me/CatPower12)$'\n'
+Note - Incremental Pushed Via Update too :)$'\n'
 *Built By* @Twel12
 *Follow* @RedmiK20Updates
 *Join* @RedmiK20GlobalOfficial"
+bash ~telegram.sh /telegram "Builds take 15-20 mins To Appear As Sourceforge is slow, Please be patient."}
+
+#Upload Test Build
+function TEST(){
+    rsync -Ph out/target/product/davinci/PixelOS*zip twel12@frs.sourceforge.net:/home/frs/project/pixelosdavinci/TestBuilds/
+bash ~/telegram.sh/telegram -M "#PixelOS #Android10 #Davinci #TestBuild$'\n'
+*Pixel OS | Android 10*$'\n'
+
+*This is a Test Build*
+
+> [Download (Sourceforge)]("https://sourceforge.net/projects/pixelosdavinci/files/TestBuilds/(basename $(ls out/target/product/davinci/PixelOS*.zip))")
+> [Join Chat](t.me/CatPower12)"
 }
 
 read -p "Do you want a signed build? (y/N) " choice_build 
 if [[ $choice_build == *"y"* ]]; then
-    echo -e "\033[01;33m\n###### Starting Release Build (～￣▽￣)～ ###### \033[0m"
+    echo -e "\033[01;33m\n------------------------ Starting Release Build (～￣▽￣)------------------------ \033[0m"
     bash ~/telegram.sh/telegram "Release Build Started(～￣▽￣)～"
     buildsigned || bash ~/telegram.sh/telegram "Build Failed :("
 
 else
-    echo -e "\033[01;33m\n###### Starting Test Build (*^_^*) ###### \033[0m"
-    bash ~/telegram.sh/telegram -c -1001391319022 "Test Build Started 😀"
-    buildbacon || bash ~/telegram.sh/telegram -c -1001391319022 "Build Failed :("
+    echo -e "\033[01;33m\n---------------------------Starting Test Build (*^_^*)--------------------------- \033[0m"
+    bash ~/telegram.sh/telegram "Test Build Started 😀"
+    buildbacon || bash ~/telegram.sh/telegram "Build Failed :("
 
 fi
