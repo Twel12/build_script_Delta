@@ -4,8 +4,24 @@ set -e
 
 export LC_ALL=C
 
-echo -e "\033[01;33m\n---------------------------PixelOS Script By Twel12--------------------------- \033[0m"
-echo -e "\033[01;33m\n----------------------------------Script V1.0--------------------------------- \033[0m"
+echo -e "\e[36m\e[1m---------------------------PixelOS Script By Twel12---------------------------
+\e[92m----------------------------------Script v2.0---------------------------------"
+
+#Take Time for OTA Updater
+ota=$(date +"%s")
+
+#Telegram
+telegram () {
+  ~/telegram.sh/telegram "$1" "$2" "$3" "$4" "$5"
+}
+
+#Time
+function timechange() {
+ hr=$(bc <<< "${1}/3600")
+ min=$(bc <<< "(${1}%3600)/60")
+ sec=$(bc <<< "${1}%60")
+ printf "%02dHours,%02dMintues,%02dSeconds\n" $hr $min $sec
+}
 
 # Place Local Manifest in Place
 function init_local_repo() {
@@ -68,50 +84,152 @@ function apply_patches() {
 function envsetup() {
     echo -e "\033[01;33m\n---------------- Setting up build environment ---------------- \033[0m"
     . build/envsetup.sh
+    export USE_CCAHE=1
     lunch aosp_davinci-user
-    export USE_CCACHE=1
     mka installclean
 }
 
+#SourceForge Upload
+function sourceforgeIncremental() {
+    ROM=release/$DELTA_ZIP
+    ROM2=release/$NAME.zip
+    echo -e "\033[01;33m\n-------------- Uploading Build to SourceForge -------------- \033[0m"
+    rsync -Ph $ROM twel12@frs.sourceforge.net:/home/frs/project/pixelosdavinci/PixelOS_Davinci_Incremental/
+    rsync -Ph $ROM2 twel12@frs.sourceforge.net:/home/frs/project/pixelosdavinci/PixelOS_Davinci/
+    echo -e "\033[01;31m\n-------------------- Upload Completed --------------------\033[0m"
+}
+
+function sourceforgeFull() {
+    Package=/release/PixelOS*.zip
+    DownloadFull=https://sourceforge.net/projects/pixelosdavinci/files/PixelOS_Davinci/"$Package"/download
+    echo -e "\033[01;33m\n-------------- Uploading Build to SourceForge -------------- \033[0m"
+    rsync -Ph $Package twel12@frs.sourceforge.net:/home/frs/project/pixelosdavinci/PixelOS_Davinci/
+    echo -e "\033[01;31m\n-------------------- Upload Completed --------------------\033[0m"
+}
+
 #Make Post
-function POST() {
-    DownloadFull=https://sourceforge.net/projects/pixelosdavinci/files/PixelOS_Davinci/"$NAME".zip/download
+function POSTIncremental() {
+update_date=$(date +'%d %B %Y')
+DownloadFull=https://sourceforge.net/projects/pixelosdavinci/files/PixelOS_Davinci/"$NAME".zip/download
 DownloadDelta=https://sourceforge.net/projects/pixelosdavinci/files/PixelOS_Incremental/"$DELTA_ZIP"/download
-bash ~/telegram.sh/telegram -i ~/telegram.sh/hello.jpg -M "#PixelOS #Android10 #Davinci #OTAUpdates
+telegram -i ~/telegram.sh/hello.jpg -M "#PixelOS #Android10 #Davinci #OTAUpdates
 
 *Pixel OS | Android 10*
+UPDATE DATE - $update_date
 
 > [Download (Full Package)]("$DownloadFull")
 > [Download (Incremental)]("$DownloadDelta")
 > [Changelog](https://raw.githubusercontent.com/Twel12/android_OTA/master/davinci_changelogs.txt)
 > [Join Chat](t.me/CatPower12)
 
-*Built By* @Twel12
+*Built By* [Twel12]("t.me/real_twel12")
 *Follow* @RedmiK20Updates
 *Join* @RedmiK20GlobalOfficial"
-bash ~telegram.sh /telegram "Builds take 15-20 mins To Appear As Sourceforge is slow, Please be patient."
+telegram "Builds take 15-20 mins To Appear As Sourceforge is slow, Please be patient."
+echo -e "\033[01;31m\n--------------------- Post Created ^_^ ---------------------\033[0m"
+}
+
+function POSTFull() {
+update_date=$(date +'%d %B %Y')
+telegram -i ~/telegram.sh/hello.jpg -M "#PixelOS #Android10 #Davinci #OTAUpdates
+
+*Pixel OS | Android 10*
+UPDATE DATE - $update_date
+
+> [Download (Full Package)]("$DownloadFull")
+> [Changelog](https://raw.githubusercontent.com/Twel12/android_OTA/master/davinci_changelogs.txt)
+> [Join Chat](t.me/CatPower12)
+
+*Built By* [Twel12]("t.me/real_twel12")
+*Follow* @RedmiK20Updates
+*Join* @RedmiK20GlobalOfficial"
+telegram "Builds take 15-20 mins To Appear As Sourceforge is slow, Please be patient."
+echo -e "\033[01;31m\n--------------------- Post Created ^_^ ---------------------\033[0m"
 }
 
 #Upload Test Build
-function TEST(){
+function PostTEST() {
     rsync -Ph out/target/product/davinci/PixelOS*zip twel12@frs.sourceforge.net:/home/frs/project/pixelosdavinci/TestBuilds/
-bash ~/telegram.sh/telegram -M "#PixelOS #Android10 #Davinci #TestBuild
+telegram -M "#PixelOS #Android10 #Davinci #TestBuild
 *Pixel OS | Android 10*
 
 *This is a Test Build*
 
 > [Download (Sourceforge)]("https://sourceforge.net/projects/pixelosdavinci/files/TestBuilds/$(basename $(ls out/target/product/davinci/PixelOS*.zip))")
-> [Join Chat](t.me/CatPower12)"
+
+*Built By* [Twel12]("t.me/real_twel12")
+*Join* @CatPower12 "
+}
+
+#OTA DELTA
+function OTADELTA() {
+    echo -e "\e[36m\e[1m---------------------------Automatic OTA DELTA PACKAGE UPDATE---------------------------"
+FILESIZE=$(ls -al /release/$DELTA_ZIP | awk '{print $5}')
+md5=`md5sum $DELTA_ZIP | awk '{ print $1 }'`
+echo -e "
+{
+  \"response\": [
+    {
+      \"datetime\": "$ota",
+      \"filename\": \"$DELTA_ZIP\",
+      \"id\": \"$md5\",
+      \"romtype\": \"unofficial\",
+      \"size\": $FILESIZE,
+      \"url\": \"$DownloadDelta\",
+      \"version\": \"ten\",
+      \"device\" : \"davinci\"
+    }
+  ]
+} " > ~/android_OTA/davinci.json
+cd ~/android_OTA/
+git add .
+git commit -m "Automatic OTA update"
+git push git@github.com:Twel12/android_OTA.git HEAD:master
+cd $LOCAL_PATH
+echo -e "\e[36m\e[1m---------------------------Automatic OTA Update Done---------------------------"
+}
+
+#OTA Full Zip
+function OTAFULL() {
+    echo -e "\e[36m\e[1m---------------------------Automatic OTA FULL PACKAGE UPDATE---------------------------"
+    ZIP_PATH=$(find ./release/ -maxdepth 1 -type f -name "PixelOS*.zip" | sed -n -e "1{p;q}")
+    NAME=$(basename $ZIP_PATH)
+    FILESIZE=$(ls -al $ZIP_PATH | awk '{print $5}')
+md5=`md5sum $ZIP_PATH | awk '{ print $1 }'`
+echo -e "
+{
+  \"response\": [
+    {
+      \"datetime\": "$ota",
+      \"filename\": \"$NAME\",
+      \"id\": \"$md5\",
+      \"romtype\": \"unofficial\",
+      \"size\": $FILESIZE,
+      \"url\": \"$DownloadDelta\",
+      \"version\": \"ten\",
+      \"device\" : \"davinci\"
+    }
+  ]
+} " > ~/android_OTA/davinci.json
+cd ~/android_OTA/
+git add .
+git commit -m "Automatic OTA update"
+git push git@github.com:Twel12/android_OTA.git HEAD:master
+cd $LOCAL_PATH
+echo -e "\e[36m\e[1m---------------------------Automatic OTA Update Done---------------------------"
 }
 
 function buildsigned() {
 
     # Remove old changelog file
     rm -rf $OUT/PixelOS_*
-
+    folder=$(date +'%d %b %Y')
+    mv release "release $folder"
+    echo "release Folder Has been renamed to \"release $folder\""
     mka target-files-package otatools -j$(nproc --all)
-
+    time_bacon=$(date +"%s")
     echo -e "\033[01;33m\nSigning FULL package... \033[0m"
+    
     ./build/tools/releasetools/sign_target_files_apks -o -d ~/.android-certs \
         $OUT/obj/PACKAGING/target_files_intermediates/*-target_files-*.zip \
         signed-target_files.zip
@@ -128,13 +246,21 @@ function buildsigned() {
 
     mv signed-ota_update.zip ./release/$NAME.zip
     cd ./release && md5sum "$NAME.zip" | sed -e "s|$(pwd)||" > "$NAME.zip.md5sum" && cd ..
-
     mv Changelog.txt ./release/$NAME.Changelog.txt
+    
+    #time
+    time_baconend=$(date +"%s")
+    diff=$(($time_baconend - $time_bacon))
+    time=$(timechange "$diff")
+    echo Time Taken For Build: "$time"
 
-    read -p "Do you want to make Incremental build? (y/n) " choice_delta
+    read -p "What Do You Want To DO??
+    > 1. MAKE INCREMENTAL UPDATE
+    > 2. UPLOAD AND POST FULL PACKAGE" choice_delta
 
-    if [[ $choice_delta == *"y"* ]]; then
+    if [[ $choice_delta == *"1"* ]]; then
 
+        time_incremental=$(date +"%s")
         # New build files info
         LIST=$(ls -1 out/target/product/davinci | grep PixelOS_)
         NAME=${LIST%%-Changelog*}
@@ -160,7 +286,8 @@ function buildsigned() {
 
         mkdir -p release
         mv update.zip ./release/$DELTA_ZIP
-        cd ./release && md5sum "$DELTA_ZIP" | sed -e "s|$(pwd)||" > "$DELTA_ZIP.md5sum" && cd ..
+        FILE_SIZE_DELTA=$(ls -al ./release/"$DELTA_ZIP" | awk '{print $5}')
+        FILE_SIZE_FULL=$(ls -al ./release/"$NAME".zip | awk '{print $5}')
 
         mv $OLDTARGET removed-$OLDLIST
         mv signed-target_files.zip signed-target_files-${NAME}.zip
@@ -168,20 +295,33 @@ function buildsigned() {
         echo -e "\033[01;33m\nNew signed-target_files.zip has been renamed to signed-target_files-${NAME}.zip \033[0m"
         echo -e "\033[01;33mOld signed-target_files.zip has been renamed to removed-$OLDLIST \033[0m"
 
-        #Sourceforge Upload
-        ROM=release/$DELTA_ZIP
-        ROM2=release/$NAME.zip
-        echo -e "\033[01;33m\n-------------- Uploading Build to SourceForge -------------- \033[0m"
-        rsync -Ph $ROM twel12@frs.sourceforge.net:/home/frs/project/pixelosdavinci/PixelOS_Davinci_Incremental/
-        rsync -Ph $ROM2 twel12@frs.sourceforge.net:/home/frs/project/pixelosdavinci/PixelOS_Davinci/
-        echo -e "\033[01;31m\n-------------------- Upload Completed --------------------\033[0m"
-        echo -e "\033[01;31m\n---------------- Creating Download Post ^_^ ----------------\033[0m"
-        POST
-        echo -e "\033[01;31m\n--------------------- Post Created ^_^ ---------------------\033[0m"
-    fi
-        echo -e "\033[01;31m\n ---------------Incremental build Canceled! ---------------\033[0m"
+        #time
+        time_incend=$(date +"%s")
+        diff2=$(($time_incend - $time_incremental))
+        timeinc=$(timechange "$diff2")
+        echo Time Taken For Build: "$timeinc"
 
-echo -e "\033[01;32m\n----------------------- PixelOS Baked Successfully ^_^ ----------------------- \033[0m"
+        #Sourceforge Upload
+        echo -p "Do You Want To Upload To SourceForge?? (y/n)" choice_sourceforge
+        if [[ $choice_sourceforge == *"y"* ]]; then
+            sourceforgeIncremental
+            echo -p "Do You Want to Create POST?(y/n)" choice_post
+            if [[ $choice_post == *"y"* ]]; then
+                POSTIncremental
+            else
+                telegram "Bacon Successfull :P "
+            fi
+        
+        fi    
+    if [[ $choice_delta == *"2"* ]]; then
+        sourceforgeFull
+        DownloadFull=https://sourceforge.net/projects/pixelosdavinci/files/PixelOS_Davinci/"$Package"/download
+        POSTFull
+        OTAFULL
+    
+    fi
+
+    echo -e "\033[01;32m\n----------------------- PixelOS Baked Successfully ^_^ ----------------------- \033[0m"
 }
 
 function buildbacon() {
@@ -189,9 +329,9 @@ function buildbacon() {
     read -p "Do you want to Upload Build (y/n)" choice_test
 
     if [[ $choice_test == *"y"* ]]; then
-        TEST
+        PostTEST
     else
-        bash ~/telegram.sh/telegram "Build Successfull ^_^"
+        telegram "Build Successfull ^_^"
     fi
 }
 
@@ -211,40 +351,64 @@ function clean_repo() {
 function build() {
     read -p "Do you want a signed build? (y/N) " choice_build 
     if [[ $choice_build == *"y"* ]]; then
-        echo -e "\033[01;33m\n------------------------ Starting Release Build (～￣▽￣)------------------------ \033[0m"
-        bash ~/telegram.sh/telegram "Release Build Started(～￣▽￣)～"
-        buildsigned || bash ~/telegram.sh/telegram "Build Failed :("
+        echo -e "\033[01;33m\n------------------------ Starting Release Build (～￣▽￣)～------------------------ \033[0m"
+        telegram "Release Build Started(～￣▽￣)～"
+        buildsigned
 
     else
         echo -e "\033[01;33m\n---------------------------Starting Test Build (*^_^*)--------------------------- \033[0m"
-        bash ~/telegram.sh/telegram "Test Build Started 😀"
-        buildbacon || bash ~/telegram.sh/telegram "Build Failed :("
+        telegram "Test Build Started 😀"
+        buildbacon
 
     fi
 }
 
-#Start The Script
+#Start The Script (USING HELLO WORLD CAUSE WHY NOT ITS THE FIRST STEP TO CODING)
+funtion helloworld(){
 read -p "Enter the number from below for desired option.
 > 1.Repo Sync
 > 2.Start Bacon
 > 3.Clean Repo
+> 4.Exit Script
 
 Enter Number:" choice_script
 
-if [[ $choice_script == *"1"* ]]; then
-    init_local_repo
-    init_main_repo
-    sync_repo
-    apply_patches
-    envsetup
+    if [[ $choice_script == *"1"* ]]; then
+        init_local_repo
+        init_main_repo
+        sync_repo
+        apply_patches
+        envsetup
+        read -p "Do You want to Start Bacon ??(y/n)" choice_bacon
+        if [[ $choice_bacon == *"y"* ]]; then
+            build
+        else
+            helloworld
+        fi    
+    
+    elif [[ $choice_script == *"2"* ]]; then
+        envsetup
+        build
 
-elif [[ $choice_script == *"2"* ]]; then
-    envsetup
-    build
+    elif [[ $choice_script == *"3"* ]]; then
+        clean_repo
 
-elif [[ $choice_script == *"3"* ]]; then
-    clean_repo
+    elif [[ $choice_script == *"4"* ]]; then
 
-else
-    echo -e "\033[01;33m\n---------------------------Invalid Option Entered--------------------------- \033[0m"
-fi
+        read -p Do You Wanna Exit/End Script ? (yes/no) choice_exit
+        if [[ $choice_exit == *"yes"* ]]; then  
+            echo -e "\033[01;33m\n------------------------------------K Byeee------------------------------------ \033[0m"
+            exit
+        else
+            helloworld
+        fi
+
+    else
+        echo -e "\033[01;33m\n---------------------------Invalid Option Entered--------------------------- \033[0m"
+        helloworld
+
+    fi
+}
+
+helloworld
+echo "---------------------------PixelOS Baked Successfully :P---------------------------"
