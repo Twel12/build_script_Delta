@@ -3,14 +3,14 @@
 ## Usage:
 ```bash
 # create a folder to hold source code
-mkdir aosp
-cd aosp
+mkdir PixelOS
+cd PixelOS
 
 # clone build_scripts into aosp
 git clone https://github.com/Twel12/build_script_Delta.git build_scripts
 
 # run build scripts
-bash build_scripts/build_davinci.sh
+bash build_scripts/server.sh
 ```
 
 ## Links:
