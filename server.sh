@@ -263,7 +263,55 @@ Enter Number:"  choice_signed
     echo Time Taken For Build: "$time"
 
     if [[ $choice_signed == *"1"* ]]; then
-        MKAINCREMENTAL
+        time_incremental=$(date +"%s")
+        # New build files info
+        LIST=$(ls -1 out/target/product/davinci | grep PixelOS_)
+        NAME=${LIST%%-Changelog*}
+        TEMP=${LIST%%-UNOFFICIAL*}
+        NEWDATE=${TEMP##*10.0-}
+
+        echo -e "\033[33m\nNew build filename: ${NAME}.zip \033[0m"
+
+        # Old build files info
+        OLDLIST=$(ls -1 | grep signed-target_files-)
+        OLDTARGET=${OLDLIST##*signed-target_files-}
+        OLDBUILD=${OLDTARGET%%-UNOFFICIAL*}
+        DELTA_ZIP="$NAME-incremental-$OLDTARGET"
+
+        echo -e "\033[33mOld build filename: ${OLDTARGET}\033[0m"
+
+        echo -e "\033[01;33m\nMake Incremental package... \033[0m"
+        mv $OLDLIST $OLDTARGET
+        ./build/tools/releasetools/ota_from_target_files --file -i \
+            $OLDTARGET \
+            signed-target_files.zip \
+            update.zip
+
+        mkdir -p release
+        mv update.zip ./release/$DELTA_ZIP
+        FILE_SIZE_DELTA=$(ls -al ./release/"$DELTA_ZIP" | awk '{print $5}')
+        FILE_SIZE_FULL=$(ls -al ./release/"$NAME".zip | awk '{print $5}')
+
+        mv $OLDTARGET removed-$OLDLIST
+        mv signed-target_files.zip signed-target_files-${NAME}.zip
+
+        echo -e "\033[01;33m\nNew signed-target_files.zip has been renamed to signed-target_files-${NAME}.zip \033[0m"
+        echo -e "\033[01;33mOld signed-target_files.zip has been renamed to removed-$OLDLIST \033[0m"
+
+        #time
+        time_incend=$(date +"%s")
+        diff2=$(($time_incend - $time_incremental))
+        timeinc=$(timechange "$diff2")
+        echo Time Taken For Build: "$timeinc"
+
+        if stat --printf='' ./release/PixelOS*.zip 2>/dev/null; then
+            telegram -c @CatPower12 "Bacon Successfull ,Time Taken For Build: $time ,$timeinc"
+            sourceforgeIncremental
+            POSTIncremental
+            OTADELTA
+        else
+            telegram "Build Failed :("
+        fi
 
     elif [[ $choice_signed == *"2"* ]]; then
         if stat --printf='' ./release/PixelOS*.zip 2>/dev/null; then
@@ -278,60 +326,6 @@ Time Taken - $time "
         fi
 
     fi
-}
-
-function MKAINCREMENTAL() {
-    time_incremental=$(date +"%s")
-    # New build files info
-    LIST=$(ls -1 out/target/product/davinci | grep PixelOS_)
-    NAME=${LIST%%-Changelog*}
-    TEMP=${LIST%%-UNOFFICIAL*}
-    NEWDATE=${TEMP##*10.0-}
-
-    echo -e "\033[33m\nNew build filename: ${NAME}.zip \033[0m"
-
-    # Old build files info
-    OLDLIST=$(ls -1 | grep signed-target_files-)
-    OLDTARGET=${OLDLIST##*signed-target_files-}
-    OLDBUILD=${OLDTARGET%%-UNOFFICIAL*}
-    DELTA_ZIP="$NAME-incremental-$OLDTARGET"
-
-    echo -e "\033[33mOld build filename: ${OLDTARGET}\033[0m"
-
-    echo -e "\033[01;33m\nMake Incremental package... \033[0m"
-    mv $OLDLIST $OLDTARGET
-    ./build/tools/releasetools/ota_from_target_files --file -i \
-        $OLDTARGET \
-        signed-target_files.zip \
-        update.zip
-
-    mkdir -p release
-    mv update.zip ./release/$DELTA_ZIP
-    FILE_SIZE_DELTA=$(ls -al ./release/"$DELTA_ZIP" | awk '{print $5}')
-    FILE_SIZE_FULL=$(ls -al ./release/"$NAME".zip | awk '{print $5}')
-
-    mv $OLDTARGET removed-$OLDLIST
-    mv signed-target_files.zip signed-target_files-${NAME}.zip
-
-    echo -e "\033[01;33m\nNew signed-target_files.zip has been renamed to signed-target_files-${NAME}.zip \033[0m"
-    echo -e "\033[01;33mOld signed-target_files.zip has been renamed to removed-$OLDLIST \033[0m"
-
-    #time
-    time_incend=$(date +"%s")
-    diff2=$(($time_incend - $time_incremental))
-    timeinc=$(timechange "$diff2")
-    echo Time Taken For Build: "$timeinc"
-
-    if stat --printf='' ./release/PixelOS*.zip 2>/dev/null; then
-        telegram -c @CatPower12 "Bacon Successfull ,Time Taken For Build: $time"
-        sourceforgeIncremental
-        POSTIncremental
-        OTADELTA
-    else
-        telegram "Build Failed :("
-    fi
-
-    echo -e "\033[01;32m\n----------------------- PixelOS Baked Successfully ^_^ ----------------------- \033[0m"
 }
 
 function buildbacon() {
