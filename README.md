@@ -1,4 +1,4 @@
-# PixelExperience build_scripts for davinci
+# PixelOS build_scripts for davinci
 
 ## Usage:
 ```bash

@@ -6,13 +6,10 @@
 
 <!-- Track Updater from my personal repo -->
 <remove-project name="packages_apps_Updates" />
-<project path="packages/apps/Updater" name="uo_packages_apps_Updates" remote="Twel12" revision="ten" />
+<project path="packages/apps/Updater" name="uo_packages_apps_Updates" remote="Twel12" revision="plus" />
 
 <!-- Arian's kernel -->
 <project path="kernel/xiaomi/sm6150" name="android_kernel_xiaomi_sm6150" remote="Twel12" revision="lineage-17.1" />
-
-<!-- Long Screenshot -->
-<project path="external/asus/stitchimage" name="external_asus_stitchimage" remote="Twel12" revision="master" />
 
 <!-- Xiaomi vendor -->
 <project path="vendor/xiaomi/davinci" name="proprietary_vendor_xiaomi_davinci" remote="Twel12" revision="ten" />
@@ -30,9 +27,15 @@
 <project path="vendor/nxp/opensource/sn100x/hidlimpl" name="android_vendor_nxp_opensource_hidlimpl" remote="los" revision="lineage-17.1-sn100x" />
 
 <!-- PE patches for davinci -->
-<project path="patches" name="build_patches" remote="Twel12" revision="pe-10.0" />
+<project path="patches" name="build_patches" remote="Twel12" revision="ten-plus" />
   
 <!-- davinci device tree -->
 <project path="device/xiaomi/davinci" name="device-xiaomi-davinci" remote="Twel12" revision="ten" />
+
+<!-- Track Stuff from my Repos -->
+<remove-project name="frameworks_base" />
+<project path="frameworks/base" name="frameworks_base" remote="Twel12" revision="ten-plus" />
+<remove-project name="packages_apps_Settings" />
+<project path="packages/apps/Settings" name="packages_apps_Settings" remote="Twel12" revision="ten-plus" />
 
 </manifest>
