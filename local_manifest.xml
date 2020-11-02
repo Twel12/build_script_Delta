@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<manifest>
+<remote name="los" fetch="https://github.com/LineageOS/" />
+<remote name="Twel12" fetch="https://github.com/Twel12/" />
+<remote name="pe" fetch="https://gitlab.com/PixelExperience/" />
+
+<!-- Track Updater from ours.priv repo -->
+<remove-project name="packages_apps_Updates" />
+<project path="packages/apps/Updater" name="android_packages_apps_Updater" remote="Twel12" revision="ten" />
+
+<!-- Arian's kernel -->
+<project path="kernel/xiaomi/sm6150" name="android_kernel_xiaomi_sm6150" remote="Twel12" revision="lineage-17.1" />
+
+<!-- Long Screenshot -->
+<project path="external/asus/stitchimage" name="external_asus_stitchimage" remote="Twel12" revision="master" />
+
+<!-- Xiaomi vendor -->
+<project path="vendor/xiaomi/davinci" name="proprietary_vendor_xiaomi_davinci" remote="Twel12" revision="ten" />
+
+<!-- PixelLiveWallpaper -->
+<project path="packages/apps/PixelLiveWallpaper" name="packages_apps_PixelLiveWallpaper" remote="pe" revision="ten" />
+
+<!-- Track nxp from los -->
+<project path="hardware/xiaomi" name="android_hardware_xiaomi" remote="los" revision="lineage-17.1" />
+<project path="vendor/nxp/opensource/interfaces/nfc" name="android_vendor_nxp_interfaces_opensource_nfc" remote="los" revision="lineage-17.1" />
+<project path="vendor/nxp/opensource/commonsys/external/libnfc-nci" name="android_vendor_nxp_opensource_external_libnfc-nci" remote="los" revision="lineage-17.1" />
+<project path="vendor/nxp/opensource/commonsys/frameworks" name="android_vendor_nxp_opensource_frameworks" remote="los" revision="lineage-17.1" />
+<project path="vendor/nxp/opensource/commonsys/packages/apps/Nfc" name="android_vendor_nxp_opensource_packages_apps_Nfc" remote="los" revision="lineage-17.1" />
+<project path="vendor/nxp/opensource/sn100x/halimpl" name="android_vendor_nxp_opensource_halimpl" remote="los" revision="lineage-17.1-sn100x" />
+<project path="vendor/nxp/opensource/sn100x/hidlimpl" name="android_vendor_nxp_opensource_hidlimpl" remote="los" revision="lineage-17.1-sn100x" />
+
+<!-- PE patches for davinci -->
+<project path="patches" name="build_patches" remote="Twel12" revision="pe-10.0" />
+  
+<!-- davinci device tree -->
+<project path="device/xiaomi/davinci" name="device-xiaomi-davinci" remote="Twel12" revision="ten" />
+
+</manifest>
