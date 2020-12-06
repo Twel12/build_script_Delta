@@ -3,8 +3,7 @@
 # Recommended For Ubuntu 18.04 or Higher
 export LC_ALL=C
 
-echo -e "\e[36m\e[1m---------------------------PixelOS Script By Twel12---------------------------
-\e[92m----------------------------------Script v2.5---------------------------------"
+echo -e "\e[36m\e[1m---------------------------PixelOS Script By Twel12---------------------------"
 
 # Some Useful Stuff
 ota=$(date +"%s")
@@ -71,7 +70,7 @@ function init_main_repo() {
 # Start Sycing Repo
 function sync_repo() {
     echo -e "\033[01;33m\nSync fetch repo... \033[0m"
-    repo sync -c -j$(nproc --all) --force-sync --no-clone-bundle --no-tags
+    repo sync -c -q --force-sync --optimized-fetch --no-tags --no-clone-bundle --prune -j$(nproc --all) #SAVETIME
 }
 
 # Apply Patches
@@ -114,12 +113,27 @@ function apply_patches() {
 
 # Setup Build Enviornment
 function envsetup() {
+    echo -e "\033[01;33m\nEnter Build Type
+1.user
+2.userdebug
+3.eng \033[0m"
+    read -p "" choice_buildtype
+    if [[ $choice_buildtype == *"1"* ]]; then
+        buildtype=user
+    elif [[ $choice_buildtype == *"1"* ]]; then
+        buildtype=userdebug
+    elif [[ $choice_buildtype == *"1"* ]]; then
+        buildtype=eng
+    else
+        echo "Invalid Option"
+        envsetup
+    fi
     echo -e "\033[01;33m\n---------------- Setting up build environment ---------------- \033[0m"
     ccache -M 70G
     export USE_CCACHE=1
     export CCACHE_EXEC=$(command -v ccache)
     . build/envsetup.sh
-    lunch aosp_davinci-user
+    lunch aosp_davinci-$buildtype
     make installclean
 }
 
@@ -383,16 +397,20 @@ function build() {
     read -p "Do you want a Public Release Signed build? (y/N)  " choice_build 
     if [[ $choice_build == *"y"* ]]; then
         echo -e "\033[01;33m\n------------------------ Starting Release Build (～￣▽￣)～------------------------ \033[0m"
-        telegram -c @CatPower12 "Release Build Started(～￣▽￣)～"
+        telegram -c @CatPower12 "Release Build Compilation Started for PixelOS
+
+*Varient*: $type
+*Android Version*: 10
+*Starting Time*: $(date)"
         buildsigned
     else
         echo -e "\033[01;33m\n---------------------------Starting Test Build (*^_^*)--------------------------- \033[0m"
         read -p "Do you want to Upload our Build (y/n)" choice_test
-        if [[ $choice_test == *"y"* ]]; then
-            telegram -c @CatPower12 "Beta(Public) Build Started 😀"
-        else
-            telegram -c @CatPower12 "Private Test Build Started 😀"
-        fi
+        telegram -c @CatPower12 -M "Test Build Compilation Started for PixelOS
+
+*Varient*: $type
+*Android Version*: 10
+*Starting Time*: $(date)"
         buildstart=$(date +"%s")
         buildbacon
         build_error henlo
@@ -400,10 +418,18 @@ function build() {
         buildtime=$(($buildend - $buildstart))
         timefinal=$(timechange "$buildtime")
         if [[ $choice_test == *"y"* ]]; then
-            telegram -c @CatPower12 "Beta Build Successfully Completed in $timefinal, will be posted in some time ."
+            telegram -c @CatPower12 -M "Beta Build Successfully Completed for PixelOS
+
+*Varient*: $type
+*Android Version*: 10
+*Time Taken For Build*: $timefinal "
             PostTEST
         else
-            telegram -c @CatPower12 "Test Build Successfully Completed in $timefinal "
+            telegram -c @CatPower12 -M "Test Build Successfully Completed for PixelOS
+
+*Varient*: $type
+*Android Version*: 10
+*Time Taken For Build*: $timefinal "
         fi
     fi
 }
