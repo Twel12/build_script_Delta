@@ -120,9 +120,9 @@ function envsetup() {
     read -p "" choice_buildtype
     if [[ $choice_buildtype == *"1"* ]]; then
         buildtype=user
-    elif [[ $choice_buildtype == *"1"* ]]; then
+    elif [[ $choice_buildtype == *"2"* ]]; then
         buildtype=userdebug
-    elif [[ $choice_buildtype == *"1"* ]]; then
+    elif [[ $choice_buildtype == *"3"* ]]; then
         buildtype=eng
     else
         echo "Invalid Option"
